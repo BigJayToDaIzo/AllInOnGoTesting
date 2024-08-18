@@ -1,0 +1,20 @@
+FROM golang:1.20-alpine
+WORKDIR /app
+##  NOTE: you can add in a go.sum to this as well
+##      but this is still used to have everything
+##      ready for building.
+COPY go.mod ./
+RUN go mod download
+COPY . .
+## NOTE: here we must use RUN here. But the other stages 
+## Will not run if this is CMD.
+RUN go test ./...
+
+##  Stage 2: Build the application (only if tests pass)
+FROM golang:1.20-alpine AS final
+WORKDIR /app
+COPY --from=builder /app /app
+RUN go build -o myapp .
+
+## Define the command to run the application
+CMD ["./myapp"]
